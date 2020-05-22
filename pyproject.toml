@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "sdemikhov_page_loader"
+version = "0.1.0"
+description = ""
+authors = ["Sergey Demikhov <demikhov.sergey@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+requests = "^2.23.0"
+
+[tool.poetry.dev-dependencies]
+flake8 = "^3.8.1"
+pytest = "^5.4.2"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+
+[tool.poetry.scripts]
+page-loader = "page_load.scripts.page_load:main"
