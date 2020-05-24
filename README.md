@@ -21,7 +21,7 @@
   <h2>Development process:</h2>
   <ul>
     <li>
-      <p>Download web page:</p>
+      <p>Download web page to choosen directory and cwd:</p>
       <p><a href="https://asciinema.org/a/hPtCshE94U1CyxID48RGDE2qg" target="_blank"><img src="https://asciinema.org/a/hPtCshE94U1CyxID48RGDE2qg.svg" /></a></p>
     </li>
   </ul>
