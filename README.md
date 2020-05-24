@@ -2,7 +2,7 @@
 <div>
   <p>
     <a href="https://codeclimate.com/github/sdemikhov/python-project-lvl3/maintainability"><img src="https://api.codeclimate.com/v1/badges/6e5bd221dd513f646112/maintainability" /></a>
-    <a https://travis-ci.org/sdemikhov/python-project-lvl3.svg?branch=master"><img src="https://travis-ci.org/sdemikhov/python-project-lvl3.svg?branch=master" /></a>
+    <a href="https://travis-ci.org/sdemikhov/python-project-lvl3.svg?branch=master"><img src="https://travis-ci.org/sdemikhov/python-project-lvl3.svg?branch=master" /></a>
   </p>
   <p>Page-loader is a CLI tool to download web pages.</p>
   <h2>Install Page-loader:</h2>
