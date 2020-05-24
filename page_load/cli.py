@@ -17,5 +17,5 @@ parser.add_argument(
     help=(
         "Set directory for saved page"
     ),
-    dest='saved_page',
+    dest='destination',
 )

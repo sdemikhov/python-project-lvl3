@@ -2,10 +2,10 @@ install:
 	@poetry install
 
 test:
-	poetry run pytest sdemikhov_page_loader tests
+	poetry run pytest page_load tests
 
 lint:
-	poetry run flake8 sdemikhov_page_loader
+	poetry run flake8 page_load
 
 selfcheck:
 	poetry check
@@ -16,6 +16,6 @@ build: check
 	@poetry build
 
 publish: build
-	@poetry -r test_pypi
+	@poetry publish -r test_pypi
 
 .PHONY: install test lint selfcheck check build publish
