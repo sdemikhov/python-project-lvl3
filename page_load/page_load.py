@@ -12,24 +12,25 @@ SUFFIX = '_files'
 def page_loader(target_url, destination=None):
     response = send_request(target_url)
 
-    page_filename = make_filename(target_url)
-    if destination is None:
-        destination_path = Path.cwd()
-    else:
-        destination_path = Path(destination)
+    page_filename = make_name(target_url, truncate=SCHEME)
+
     soup = BeautifulSoup(response.text)
-    tags_with_resources = soup.find_all(certain_tag_has_certain_src)
+    tags_with_resources = soup.find_all(important_tag_has_local_src)
     if tags_with_resources:
         resources = []
         resources_directory = Path(page_filename + SUFFIX)
         for tag in tags_with_resources:
-            resource_filename = make_filename(tag['src'])
+            resource_filename = make_name(tag['src']) # !!!!!!!1
             resource_url = urljoin(target_url, tag['src'])
             resources.append((resource_filename, resource_url))
             new_src = resources_directory / resource_filename
             tag['src'] = new_src
-    if not destination_path.exists():
-        destination_path.mkdir()
+    if destination is None:
+        destination_path = Path.cwd()
+    else:
+        destination_path = Path(destination)
+        if not destination_path.exists():
+            destination_path.mkdir()
     with open(destination_path / (page_filename + EXTENSION), 'w') as f:
         f.write(soup.prettify())
     if resources:
@@ -53,18 +54,22 @@ def send_request(url_):
             MESSAGE_TEMPATE.format(url=url_, code=response.status_code)
         )
 
-SCHEME = r'^.*://|^/'
+SCHEME = r'^.*://'
 NOT_LETTERS_OR_DIGITS = r'[^a-zA-Z0-9]'
+FILENAME_WITH_EXTENSION = '(?P<name>.+)(?P<extension>\.[a-zA-Z0-9]+)'
 SEPARATOR = '-'
 
 
-def make_filename(target_url):
-    url_without_scheme = re.sub(SCHEME, '', target_url)
-    return re.sub(
-        NOT_LETTERS_OR_DIGITS,
-        SEPARATOR,
-        url_without_scheme,
-    )
+def make_name(string, truncate=None, save_extension=False):
+    if truncate is not None:
+        string = re.sub(truncate, '', string)
+    if save_extension:
+        parts = re.search(FILENAME_WITH_EXTENSION, string)
+    string = re.sub(NOT_LETTERS_OR_DIGITS, SEPARATOR, string)
+    if extension:
+        return string + '.' + extension
+    return string
+
 
 
 IMPORTANT_TAGS = [
@@ -74,7 +79,7 @@ IMPORTANT_TAGS = [
 ]
 LOCAL_RESOURCES = r'^/'
 
-def certain_tag_has_certain_src(tag):
+def important_tag_has_local_src(tag):
     return (
         tag.name in IMPORTANT_TAGS and
         tag.has_attr('src') and
