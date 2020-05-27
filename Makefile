@@ -1,5 +1,5 @@
 install:
-	@poetry install
+	poetry install
 
 test:
 	poetry run pytest page_load tests
@@ -13,9 +13,9 @@ selfcheck:
 check: selfcheck test lint
 
 build: check
-	@poetry build
+	poetry build
 
 publish: build
-	@poetry publish -r test_pypi
+	poetry publish -r test_pypi
 
 .PHONY: install test lint selfcheck check build publish
