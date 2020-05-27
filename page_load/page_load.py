@@ -14,13 +14,17 @@ def page_loader(target_url, destination=None):
 
     page_filename = make_name(target_url, truncate=SCHEME)
 
-    soup = BeautifulSoup(response.text)
+    soup = BeautifulSoup(response.text, features="html.parser")
     tags_with_resources = soup.find_all(important_tag_has_local_src)
     if tags_with_resources:
         resources = []
         resources_directory = Path(page_filename + SUFFIX)
         for tag in tags_with_resources:
-            resource_filename = make_name(tag['src']) # !!!!!!!1
+            resource_filename = make_name(
+                tag['src'],
+                truncate=SCHEME,
+                save_extension=True
+            )
             resource_url = urljoin(target_url, tag['src'])
             resources.append((resource_filename, resource_url))
             new_src = resources_directory / resource_filename
@@ -54,7 +58,8 @@ def send_request(url_):
             MESSAGE_TEMPATE.format(url=url_, code=response.status_code)
         )
 
-SCHEME = r'^.*://'
+
+SCHEME = r'^.+://|^\.?/'
 NOT_LETTERS_OR_DIGITS = r'[^a-zA-Z0-9]'
 FILENAME_WITH_EXTENSION = '(?P<name>.+)(?P<extension>\.[a-zA-Z0-9]+)'
 SEPARATOR = '-'
@@ -65,11 +70,14 @@ def make_name(string, truncate=None, save_extension=False):
         string = re.sub(truncate, '', string)
     if save_extension:
         parts = re.search(FILENAME_WITH_EXTENSION, string)
-    string = re.sub(NOT_LETTERS_OR_DIGITS, SEPARATOR, string)
-    if extension:
-        return string + '.' + extension
-    return string
-
+        if parts is not None:
+            name =  re.sub(
+                NOT_LETTERS_OR_DIGITS,
+                SEPARATOR,
+                parts.group('name')
+            )
+            return name + parts.group('extension')
+    return re.sub(NOT_LETTERS_OR_DIGITS, SEPARATOR, string)
 
 
 IMPORTANT_TAGS = [
@@ -77,7 +85,8 @@ IMPORTANT_TAGS = [
     'script',
     'img',
 ]
-LOCAL_RESOURCES = r'^/'
+LOCAL_RESOURCES = r'^\.?/|^\w+/'
+
 
 def important_tag_has_local_src(tag):
     return (
