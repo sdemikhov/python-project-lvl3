@@ -24,5 +24,9 @@
       <p>Download web page to choosen directory and cwd:</p>
       <p><a href="https://asciinema.org/a/hPtCshE94U1CyxID48RGDE2qg" target="_blank"><img src="https://asciinema.org/a/hPtCshE94U1CyxID48RGDE2qg.svg" /></a></p>
     </li>
+      <li>
+      <p>Download web page and local resources:</p>
+      <p><a href="https://asciinema.org/a/Qzq2CBnzMGm41gxNffuXe0MX9" target="_blank"><img src="https://asciinema.org/a/Qzq2CBnzMGm41gxNffuXe0MX9.svg" /></a></p>
+    </li>
   </ul>
 </div>
