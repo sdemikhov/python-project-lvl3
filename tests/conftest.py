@@ -1,39 +1,78 @@
 import requests
 import pytest
+from collections import namedtuple
 
 from pathlib import Path
 
 TESTS_DIR = Path(__file__).parent.absolute()
 FIXTURES_DIR = TESTS_DIR / 'fixtures'
-TEST_PAGE_FILENAME = 'hexlet-io-courses.html'
-TEST_URL = 'https://hexlet.io/courses'
+
+PAGE_FILENAME = 'courses.html'
+PAGE_URL = 'https://ru.hexlet.io/courses'
+
+RESULT_FILENAME = 'ru-hexlet-io-courses.html'
+
+RESOURCE_DIR = 'ru-hexlet-io-courses_files'
+RESOURCE_URL = (
+    'https://ru.hexlet.io/cdn-cgi/scripts'
+    '/5c5dd728/cloudflare-static/email-decode.min.js'
+)
+RESOURCE_FILENAME = (
+    'cdn-cgi-scripts-5c5dd728-cloudflare-static-email-decode-min.js'
+)
+
 
 SUCCESSFUL = 200
 ERROR = 404
 
-class MockResponse:
-    def __init__(self, ok=True, text=None, status_code=SUCCESSFUL):
-        self.ok = ok
-        self.text = text
-        self.status_code = status_code
+
+def mock_response(ok=True, text=None, status_code=SUCCESSFUL, url=None):
+    Response = namedtuple('Response', 'ok, text, status_code, url')
+    return Response(ok, text, status_code, url)
+
+
+def make_page(path, filename, url=None, directory=None):
+    Page = namedtuple('Page', 'path, filename, url, directory, content')
+
+    with open(path / filename) as f:
+        content = f.read()
+    return Page(path, filename, url, directory, content)
 
 
 @pytest.fixture
 def test_page():
-    page = {}
-
-    with open(FIXTURES_DIR / TEST_PAGE_FILENAME) as f:
-        page['content'] = f.read()
-
-    page['filename'] = TEST_PAGE_FILENAME
-    page['url'] = TEST_URL
-    return page
+    return make_page(
+        FIXTURES_DIR,
+        PAGE_FILENAME,
+        url=PAGE_URL
+    )
 
 
 @pytest.fixture
-def mock_response_successful(monkeypatch, test_page):
+def result():
+    return make_page(
+        FIXTURES_DIR,
+        RESULT_FILENAME,
+    )
+
+
+@pytest.fixture
+def resource():
+    return make_page(
+        FIXTURES_DIR / RESOURCE_DIR,
+        RESOURCE_FILENAME,
+        url=RESOURCE_URL,
+        directory=RESOURCE_DIR,
+    )
+
+
+@pytest.fixture
+def mock_response_successful(monkeypatch, test_page, resource):
     def mock_get(*args, **kwargs):
-        return MockResponse(text=test_page['content'])
+        if PAGE_URL in args:
+            return mock_response(text=test_page.content, url=PAGE_URL)
+        elif RESOURCE_URL in args:
+            return mock_response(text=resource.content, url=RESOURCE_URL)
 
     monkeypatch.setattr(requests, "get", mock_get)
 
@@ -41,6 +80,6 @@ def mock_response_successful(monkeypatch, test_page):
 @pytest.fixture
 def mock_response_error(monkeypatch):
     def mock_get(*args, **kwargs):
-        return MockResponse(ok=False, status_code=ERROR)
+        return mock_response(ok=False, status_code=ERROR)
 
     monkeypatch.setattr(requests, "get", mock_get)
