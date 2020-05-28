@@ -3,6 +3,8 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
+from page_load.log import logger
+
 SEPARATOR = '-'
 EXTENSION = '.html'
 SUFFIX = '_files'
@@ -16,6 +18,9 @@ SRC = 'src'
 
 def make_tree(response):
     tree = {}
+    logger.debug(
+        "Start making tree for page '{}'...".format(response.url)
+    )
     soup = BeautifulSoup(response.text, features="html.parser")
     page_name = make_name(response.url, crop=SCHEME)
     tree[FILENAME] = page_name + EXTENSION
@@ -24,6 +29,9 @@ def make_tree(response):
         resources = []
         tree[RESOURCES_DIR] = Path(page_name + SUFFIX)
         for tag in tags_with_resources:
+            logger.debug(
+                "Local resource found '{}'".format(tag[SRC])
+            )
             resource_filename = make_name(
                 tag[SRC],
                 crop=SCHEME,
@@ -35,6 +43,9 @@ def make_tree(response):
             tag[SRC] = new_src
         tree[RESOURCES] = resources
     tree[CONTENT] = str(soup)
+    logger.debug(
+        "Tree successfuly completed."
+    )
     return tree
 
 

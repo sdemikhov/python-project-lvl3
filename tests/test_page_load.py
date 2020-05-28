@@ -1,5 +1,6 @@
 import requests
 import pytest
+from bs4 import BeautifulSoup
 
 from page_load import page_loader
 
@@ -10,8 +11,8 @@ def test_page_loader_successful_responce(
         tmp_path,
         mock_response_successful,
         test_page,
-        result,
-        resource,
+        expected_page,
+        expected_resource,
     ):
 
     destination = tmp_path / TEMP_DIR
@@ -19,9 +20,9 @@ def test_page_loader_successful_responce(
 
     page_loader(test_page.url, destination)
     
-    saved_page_path = destination / result.filename
+    saved_page_path = destination / expected_page.filename
     saved_page_resource_path = (
-        destination / resource.directory / resource.filename
+        destination / expected_resource.directory / expected_resource.filename
     )
     assert saved_page_path.exists(), (
         "wrong page filename or page doesn't saved"
@@ -31,7 +32,17 @@ def test_page_loader_successful_responce(
         "wrong page resource filename or resource doesn't saved"
     )
 
-    assert saved_page_resource_path.read_text() == resource.content, (
+    saved_soup = BeautifulSoup(
+        saved_page_path.read_text(),
+        features="html.parser"
+    )
+    expected_soup = BeautifulSoup(expected_page.content, features="html.parser")
+
+    assert saved_soup == expected_soup, (
+        "Content of saved page is different"
+    )
+
+    assert saved_page_resource_path.read_text() == expected_resource.content, (
         "Content of saved page resource is different"
     )
 

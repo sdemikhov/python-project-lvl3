@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sdemikhov_page_loader"
-version = "0.2.0"
+version = "0.3.0"
 description = "Page-loader is a CLI tool to download web pages."
 authors = ["Sergey Demikhov <demikhov.sergey@gmail.com>"]
 

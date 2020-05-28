@@ -13,9 +13,23 @@ parser.add_argument(
     )
 
 parser.add_argument(
+    '-o',
     '--output',
     help=(
         "Set directory for saved page"
     ),
+    metavar='OUTPUT',
     dest='destination',
+)
+
+parser.add_argument(
+    '-l',
+    '--log',
+    help=(
+        "Set level of logging information: 'none', 'warning', 'debug'"
+    ),
+    metavar='LOG_LEVEL',
+    dest='log_level',
+    choices=['none', 'warning', 'debug'],
+    default='none',
 )

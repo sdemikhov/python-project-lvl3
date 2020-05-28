@@ -49,7 +49,7 @@ def test_page():
 
 
 @pytest.fixture
-def result():
+def expected_page():
     return make_page(
         FIXTURES_DIR,
         RESULT_FILENAME,
@@ -57,7 +57,7 @@ def result():
 
 
 @pytest.fixture
-def resource():
+def expected_resource():
     return make_page(
         FIXTURES_DIR / RESOURCE_DIR,
         RESOURCE_FILENAME,
@@ -67,12 +67,15 @@ def resource():
 
 
 @pytest.fixture
-def mock_response_successful(monkeypatch, test_page, resource):
+def mock_response_successful(monkeypatch, test_page, expected_resource):
     def mock_get(*args, **kwargs):
         if PAGE_URL in args:
             return mock_response(text=test_page.content, url=PAGE_URL)
         elif RESOURCE_URL in args:
-            return mock_response(text=resource.content, url=RESOURCE_URL)
+            return mock_response(
+                text=expected_resource.content,
+                url=RESOURCE_URL
+            )
 
     monkeypatch.setattr(requests, "get", mock_get)
 
