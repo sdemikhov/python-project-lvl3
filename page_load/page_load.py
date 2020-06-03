@@ -1,55 +1,67 @@
 import requests
-
+from pathlib import Path
 
 from page_load.tree import (
     make_tree, FILENAME, RESOURCES, RESOURCES_DIR, CONTENT
 )
-from page_load import file
 from page_load.log import logger
+from page_load.exceptions import PageLoaderError
+from page_load import file
 
 
-def page_loader(target_url, destination=None):
+def page_loader(target_url, destination=''):
+    path = Path(destination)
+    file.validate_dir(path)
+
     response = send_request(target_url)
     tree = make_tree(response)
+    file.write_text(path / tree[FILENAME], tree[CONTENT])
 
-    path = file.make_dir(destination)
-    with open(path / tree[FILENAME], 'w') as page:
-        page.write(tree[CONTENT])
-        logger.debug(
-            "Page '{}' saved successful.".format(tree[FILENAME])
-        )
     if tree[RESOURCES]:
         logger.debug(
-            "Page '{}' contains local resources, need more requests...".format(
+            "Page '{}' contains local resources!".format(
                 tree[FILENAME]
             )
         )
-        resources_path = file.make_dir(path / tree[RESOURCES_DIR])
+        resources_path = Path(path / tree[RESOURCES_DIR])
         for filename, url_ in tree[RESOURCES]:
-            resource_response = send_request(url_)
-            with open(resources_path / filename, 'w') as resource:
-                resource.write(resource_response.text)
-                logger.debug(
-                    "Resource '{}' saved successful.".format(filename)
-                )
+            resource_response = send_request(url_, stream=True)
+            file.write_bytes(resources_path / filename, resource_response)
 
 
-MESSAGE_TEMPATE = "File '{url}' wasn't downloaded! Response code '{code}'"
+RESPONSE_CODE_MESSAGE_TEMPATE = (
+    "File '{url}' wasn't downloaded! Unacceptable response code '{code}'"
+)
+SUCCESSFUL_STATUS_CODE = 200
 
 
-def send_request(url):
-    logger.debug(
-        "Sending request to url '{}'...".format(url)
-    )
-    response = requests.get(url)
-    if response.ok:
+def send_request(url, stream=False):
+    try:
         logger.debug(
-            "Response recived, code: '{code}'.".format(
-                code=response.status_code
-            )
+            "Sending request to url '{}'...".format(url)
         )
+        response = requests.get(url, stream=stream)
+
+    except (
+        requests.exceptions.MissingSchema,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.Timeout,
+        requests.exceptions.TooManyRedirects
+    ) as err:
+        PageLoaderError.raise_from(err)
+
+    if response.status_code == SUCCESSFUL_STATUS_CODE:
+        logger.debug("Response recieved successfuly.")
         return response
-    else:
-        raise ValueError(
-            MESSAGE_TEMPATE.format(url=url, code=response.status_code)
+    logger.error(
+        RESPONSE_CODE_MESSAGE_TEMPATE.format(
+            url=url,
+            code=response.status_code
         )
+    )
+    raise PageLoaderError(
+        RESPONSE_CODE_MESSAGE_TEMPATE.format(
+            url=url,
+            code=response.status_code
+        )
+    )

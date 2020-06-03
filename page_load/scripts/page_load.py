@@ -1,6 +1,9 @@
+import sys
+
 from page_load.cli import parser
 from page_load.page_load import page_loader
 from page_load import log
+from page_load.exceptions import PageLoaderError
 
 
 def main():
@@ -9,10 +12,13 @@ def main():
     log.logger.debug(
         'User passed following arguments: {}'.format(arguments)
     )
-    page_loader(
-        arguments.target_url,
-        destination=arguments.destination,
-    )
+    try:
+        page_loader(
+            arguments.target_url,
+            destination=arguments.destination,
+        )
+    except PageLoaderError:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
