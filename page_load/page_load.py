@@ -15,18 +15,19 @@ def page_loader(target_url, destination=''):
 
     response = send_request(target_url)
     tree = make_tree(response)
-    file.write_text(path / tree[FILENAME], tree[CONTENT])
+    file.write_page(path / tree[FILENAME], tree[CONTENT])
 
     if tree[RESOURCES]:
-        logger.debug(
-            "Page '{}' contains local resources!".format(
-                tree[FILENAME]
+        logger.warning(
+            "Page '{}' has resources in '{}'".format(
+                tree[FILENAME],
+                tree[RESOURCES_DIR]
             )
         )
         resources_path = Path(path / tree[RESOURCES_DIR])
         for filename, url_ in tree[RESOURCES]:
             resource_response = send_request(url_, stream=True)
-            file.write_bytes(resources_path / filename, resource_response)
+            file.write_resource(resources_path / filename, resource_response)
 
 
 RESPONSE_CODE_MESSAGE_TEMPATE = (

@@ -24,7 +24,7 @@ def validate_dir(path):
     return True
 
 
-def write_text(path, data):
+def write_page(path, data):
     try:
         with open(path, 'w') as page:
             logger.debug('Save page into: {}...'.format(path))
@@ -34,7 +34,7 @@ def write_text(path, data):
         PageLoaderError.raise_from(err)
 
 
-def write_bytes(path, data):
+def write_resource(path, data):
     try:
         if not path.parent.exists():
             logger.warning(

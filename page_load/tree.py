@@ -30,7 +30,7 @@ def make_tree(response):
         tree[RESOURCES_DIR] = Path(page_name + SUFFIX)
         for tag in tags_with_resources:
             logger.debug(
-                "Local resource found '{}'".format(tag[SRC])
+                "Local resource found '{}'!".format(tag[SRC])
             )
             resource_filename = make_name_from_url(
                 tag[SRC],
