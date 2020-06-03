@@ -32,5 +32,9 @@
       <p>Added logger to project:</p>
       <p><a href="https://asciinema.org/a/Sgftcnm4ac1Axn5YPeggPogk5" target="_blank"><img src="https://asciinema.org/a/Sgftcnm4ac1Axn5YPeggPogk5.svg" /></a></p>
     </li>
+    <li>
+      <p>Added exception handling:</p>
+      <p><a href="https://asciinema.org/a/gvcuLP2wdhLG28ZT5ktIZsvC0" target="_blank"><img src="https://asciinema.org/a/gvcuLP2wdhLG28ZT5ktIZsvC0.svg" /></a></p>
+    </li>
   </ul>
 </div>
