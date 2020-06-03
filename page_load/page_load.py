@@ -59,6 +59,13 @@ def send_request(url, stream=False):
             code=response.status_code
         )
     )
+    logger.debug(
+        RESPONSE_CODE_MESSAGE_TEMPATE.format(
+            url=url,
+            code=response.status_code
+        ),
+        exc_info=True,
+    )
     raise PageLoaderError(
         RESPONSE_CODE_MESSAGE_TEMPATE.format(
             url=url,

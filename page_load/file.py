@@ -5,11 +5,19 @@ from page_load.exceptions import PageLoaderError
 def validate_dir(path):
     if not path.exists():
         logger.error('No such file or directory: {}'.format(path))
+        logger.debug(
+            'No such file or directory: {}'.format(path),
+            exc_info=True,
+        )
         raise PageLoaderError(
             'No such file or directory: {}'.format(path)
         )
     if not path.is_dir():
         logger.error('Not a directory: {}'.format(path))
+        logger.debug(
+            'Not a directory: {}'.format(path),
+            exc_info=True,
+        )
         raise PageLoaderError(
             'Not a directory: {}'.format(path)
         )
@@ -34,7 +42,7 @@ def write_bytes(path, data):
                 " start making directory...".format(path.parent)
             )
             path.parent.mkdir()
-            logger.warning("Directorycreated sucessfuly.")
+            logger.warning("Directory created sucessfuly.")
         with open(path, 'wb') as resource:
             logger.debug('Save resource into: {}...'.format(path))
             for chunk in data.iter_content():

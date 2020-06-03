@@ -15,9 +15,10 @@ def add_stream_handler(log_level):
     )
     console.setFormatter(formatter)
     if log_level == NONE:
-        logger.setLevel(logging.NOTSET)
+        level = logging.ERROR
     elif log_level == WARNING:
-        logger.setLevel(logging.WARNING)
+        level = logging.WARNING
     elif log_level == DEBUG:
-        logger.setLevel(logging.DEBUG)
+        level = logging.DEBUG
+    logger.setLevel(level)
     logger.addHandler(console)
