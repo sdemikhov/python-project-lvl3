@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sdemikhov_page_loader"
-version = "0.4.4"
+version = "0.4.5"
 description = "Page-loader is a CLI tool to download web pages."
 authors = ["Sergey Demikhov <demikhov.sergey@gmail.com>"]
 
@@ -11,8 +11,6 @@ packages = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Operating System :: POSIX :: Linux",
-    "Intended Audience :: End Users/Desktop",
-    "Topic :: Games/Entertainment",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Programming Language :: Python :: 3.7"
 ]
