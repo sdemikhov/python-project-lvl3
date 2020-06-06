@@ -24,17 +24,17 @@ def validate_dir(path):
     return True
 
 
-def write_page(path, data):
+def write_text(path, data):
     try:
         with open(path, 'w') as page:
-            logger.debug('Save page into: {}...'.format(path))
+            logger.debug('Saving page into: {}'.format(path))
             page.write(data)
             logger.debug("Page saved successfuly.")
     except (FileNotFoundError, PermissionError, NotADirectoryError) as err:
         PageLoaderError.raise_from(err)
 
 
-def write_resource(path, data):
+def write_response(path, response):
     try:
         if not path.parent.exists():
             logger.warning(
@@ -43,12 +43,26 @@ def write_resource(path, data):
             )
             path.parent.mkdir()
             logger.warning("Directory created sucessfuly.")
-        with open(path, 'wb') as resource:
-            logger.debug('Save resource into: {}...'.format(path))
-            for chunk in data.iter_content():
-                resource.write(chunk)
+
+        if response.encoding:
+            reading_mode = 'w'
+            decode_unicode = True
+        else:
+            reading_mode = 'wb'
+            decode_unicode = False
+
+        with open(path, reading_mode) as f:
+            logger.debug('Saving file into: {}'.format(path))
+            for line in response.iter_content(
+                decode_unicode=decode_unicode,
+            ):
+                f.write(line)
             logger.debug(
-                "Resource saved successfuly."
+                "File saved successfuly."
             )
-    except (FileNotFoundError, PermissionError, NotADirectoryError) as err:
+    except (
+        FileNotFoundError,
+        PermissionError,
+        NotADirectoryError
+    ) as err:
         PageLoaderError.raise_from(err)

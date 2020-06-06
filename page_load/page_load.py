@@ -1,5 +1,6 @@
 import requests
 from pathlib import Path
+from progress.bar import Bar
 
 from page_load.tree import (
     make_tree, FILENAME, RESOURCES, RESOURCES_DIR, CONTENT
@@ -9,13 +10,16 @@ from page_load.exceptions import PageLoaderError
 from page_load import file
 
 
+DOWNLOADING = 'Downloading local resources'
+
+
 def page_loader(target_url, destination=''):
     path = Path(destination)
     file.validate_dir(path)
 
     response = send_request(target_url)
     tree = make_tree(response)
-    file.write_page(path / tree[FILENAME], tree[CONTENT])
+    file.write_text(path / tree[FILENAME], tree[CONTENT])
 
     if tree[RESOURCES]:
         logger.warning(
@@ -25,23 +29,38 @@ def page_loader(target_url, destination=''):
             )
         )
         resources_path = Path(path / tree[RESOURCES_DIR])
+        progress_ = Bar(
+                DOWNLOADING,
+                max=len(tree[RESOURCES]),
+                suffix='%(percent)d%%',
+        )
         for filename, url_ in tree[RESOURCES]:
             resource_response = send_request(url_, stream=True)
-            file.write_resource(resources_path / filename, resource_response)
+            file.write_response(
+                resources_path / filename,
+                resource_response,
+            )
+            progress_.next()
+        progress_.finish()
 
 
 RESPONSE_CODE_MESSAGE_TEMPATE = (
     "File '{url}' wasn't downloaded! Unacceptable response code '{code}'"
 )
 SUCCESSFUL_STATUS_CODE = 200
+USER_AGENT = (
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
+    '(KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'
+)
 
 
 def send_request(url, stream=False):
+    headers = {'User-Agent': USER_AGENT}
     try:
         logger.debug(
             "Sending request to url '{}'...".format(url)
         )
-        response = requests.get(url, stream=stream)
+        response = requests.get(url, stream=stream, headers=headers)
 
     except (
         requests.exceptions.MissingSchema,
