@@ -20,6 +20,7 @@ parser.add_argument(
     ),
     metavar='OUTPUT',
     dest='destination',
+    default='',
 )
 
 parser.add_argument(
