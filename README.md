@@ -12,11 +12,20 @@
    </ul>
   <h2>Run Page-loader:</h2>
 <pre>
+usage: page-loader [-h] [-o OUTPUT] [-l LOG_LEVEL] target_url
 
-</pre>
-  <p>You can also use Page-loader as a library in your code:</p>
-<pre>
+Page-loader
 
+positional arguments:
+  target_url            URL to target page
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -o OUTPUT, --output OUTPUT
+                        Set directory for saved page
+  -l LOG_LEVEL, --log LOG_LEVEL
+                        Set level of logging information: 'none', 'warning',
+                        'debug'
 </pre>
   <h2>Development process:</h2>
   <ul>
@@ -33,8 +42,12 @@
       <p><a href="https://asciinema.org/a/Sgftcnm4ac1Axn5YPeggPogk5" target="_blank"><img src="https://asciinema.org/a/Sgftcnm4ac1Axn5YPeggPogk5.svg" /></a></p>
     </li>
     <li>
-      <p>Added exception handling:</p>
+      <p>Exception handling:</p>
       <p><a href="https://asciinema.org/a/gvcuLP2wdhLG28ZT5ktIZsvC0" target="_blank"><img src="https://asciinema.org/a/gvcuLP2wdhLG28ZT5ktIZsvC0.svg" /></a></p>
+    </li>
+    <li>
+      <p>Progress bar:</p>
+      <p><a href="https://asciinema.org/a/SC5k5bLjW9Je0Fx93tx8YLaNb" target="_blank"><img src="https://asciinema.org/a/SC5k5bLjW9Je0Fx93tx8YLaNb.svg" /></a></p>
     </li>
   </ul>
 </div>
