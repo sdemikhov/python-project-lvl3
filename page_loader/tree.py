@@ -2,9 +2,9 @@ import re
 from pathlib import Path
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, unquote
+from logging import getLogger
 
-from page_loader.log import logger
-
+logger = getLogger()
 
 EXTENSION = '.html'
 SUFFIX = '_files'

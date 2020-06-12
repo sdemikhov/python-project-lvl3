@@ -4,7 +4,7 @@ from collections import namedtuple
 import builtins
 from pathlib import Path
 
-from page_loader import log
+from page_loader import logging
 
 
 
@@ -74,7 +74,7 @@ def make_page(path, filename, url=None, directory=None):
 
 @pytest.fixture(autouse=True)
 def enable_log():
-    log.add_stream_handler(log.DEBUG)
+    logging.setup(logging.DEBUG)
 
 
 @pytest.fixture

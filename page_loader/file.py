@@ -1,5 +1,8 @@
-from page_loader.log import logger
+from logging import getLogger
 from page_loader.exceptions import PageLoaderError
+
+
+logger = getLogger()
 
 
 def validate_dir(path):

@@ -1,16 +1,17 @@
 import requests
 from pathlib import Path
 from progress.bar import Bar
+from logging import getLogger
 
 from page_loader.tree import (
     make_tree, FILENAME, RESOURCES, RESOURCES_DIR, CONTENT
 )
-from page_loader.log import logger
 from page_loader.exceptions import PageLoaderError
 from page_loader import file
 
 
 DOWNLOADING = 'Downloading local resources'
+logger = getLogger()
 
 
 def download_page(target_url, destination=''):

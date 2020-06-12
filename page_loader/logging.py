@@ -4,11 +4,9 @@ NONE = 'none'
 WARNING = 'warning'
 DEBUG = 'debug'
 
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
 
-
-def add_stream_handler(log_level):
+def setup(log_level):
+    logger = logging.getLogger()
     console = logging.StreamHandler()
     formatter = logging.Formatter(
         '%(asctime)s - %(levelname)s - %(message)s'
