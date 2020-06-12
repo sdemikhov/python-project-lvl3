@@ -17,7 +17,10 @@ def main():
             arguments.target_url,
             destination=arguments.destination,
         )
-    except PageLoaderError:
+    except PageLoaderError as e:
+        log.logger.error(str(e))
+        if e.__cause__:
+            log.logger.debug(e.__cause__)
         sys.exit(1)
 
 

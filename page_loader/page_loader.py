@@ -68,7 +68,7 @@ def send_request(url, stream=False):
         requests.exceptions.Timeout,
         requests.exceptions.TooManyRedirects
     ) as err:
-        PageLoaderError.raise_from(err)
+        raise PageLoaderError(err) from err
 
     if response.status_code == SUCCESSFUL_STATUS_CODE:
         logger.debug("Response recieved successfuly.")

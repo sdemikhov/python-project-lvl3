@@ -31,7 +31,7 @@ def write_text(path, data):
             page.write(data)
             logger.debug("Page saved successfuly.")
     except (FileNotFoundError, PermissionError, NotADirectoryError) as err:
-        PageLoaderError.raise_from(err)
+        raise PageLoaderError(err) from err
 
 
 def write_response(path, response):
@@ -60,9 +60,5 @@ def write_response(path, response):
             logger.debug(
                 "File saved successfuly."
             )
-    except (
-        FileNotFoundError,
-        PermissionError,
-        NotADirectoryError
-    ) as err:
-        PageLoaderError.raise_from(err)
+    except (FileNotFoundError, PermissionError, NotADirectoryError) as err:
+        raise PageLoaderError(err) from err
