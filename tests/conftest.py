@@ -4,7 +4,7 @@ from collections import namedtuple
 import builtins
 from pathlib import Path
 
-from page_load import log
+from page_loader import log
 
 
 

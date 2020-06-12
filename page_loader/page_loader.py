@@ -2,18 +2,18 @@ import requests
 from pathlib import Path
 from progress.bar import Bar
 
-from page_load.tree import (
+from page_loader.tree import (
     make_tree, FILENAME, RESOURCES, RESOURCES_DIR, CONTENT
 )
-from page_load.log import logger
-from page_load.exceptions import PageLoaderError
-from page_load import file
+from page_loader.log import logger
+from page_loader.exceptions import PageLoaderError
+from page_loader import file
 
 
 DOWNLOADING = 'Downloading local resources'
 
 
-def page_loader(target_url, destination=''):
+def download_page(target_url, destination=''):
     path = Path(destination)
     file.validate_dir(path)
 

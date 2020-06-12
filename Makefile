@@ -2,10 +2,10 @@ install:
 	poetry install
 
 test:
-	poetry run pytest page_load tests
+	poetry run pytest page_loader tests
 
 lint:
-	poetry run flake8 page_load
+	poetry run flake8 page_loader
 
 selfcheck:
 	poetry check

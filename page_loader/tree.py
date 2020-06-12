@@ -3,7 +3,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, unquote
 
-from page_load.log import logger
+from page_loader.log import logger
 
 
 EXTENSION = '.html'

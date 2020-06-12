@@ -1,4 +1,4 @@
-from page_load.log import logger
+from page_loader.log import logger
 
 
 class PageLoaderError(Exception):

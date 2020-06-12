@@ -2,13 +2,13 @@ import requests
 import pytest
 from bs4 import BeautifulSoup
 
-from page_load import page_loader
-from page_load.exceptions import PageLoaderError
+from page_loader import download_page
+from page_loader.exceptions import PageLoaderError
 
 TEMP_DIR = "test_page_loader_successful_responce"
 
 
-def test_page_loader_responce_successful(
+def test_download_page_responce_successful(
         tmp_path,
         mock_response_successful,
         test_page,
@@ -18,7 +18,7 @@ def test_page_loader_responce_successful(
     destination = tmp_path / TEMP_DIR
     destination.mkdir()
 
-    page_loader(test_page.url, destination)
+    download_page(test_page.url, destination)
     
     saved_page_path = destination / expected_page.filename
     saved_page_resource_path = (
@@ -47,33 +47,33 @@ def test_page_loader_responce_successful(
     )
 
 
-def test_page_loader_response_404(mock_response_code_404, test_page):
+def test_download_page_response_404(mock_response_code_404, test_page):
     with pytest.raises(PageLoaderError):
-        page_loader(test_page.url)
+        download_page(test_page.url)
 
 
-def test_page_loader_connection_error(
+def test_download_page_connection_error(
         mock_response_connection_error,
         test_page
     ):
     with pytest.raises(PageLoaderError):
-        page_loader(test_page.url)
+        download_page(test_page.url)
 
 
-def test_page_loader_response_timeout(mock_response_timeout, test_page):
+def test_download_page_response_timeout(mock_response_timeout, test_page):
     with pytest.raises(PageLoaderError):
-        page_loader(test_page.url)
+        download_page(test_page.url)
 
 
-def test_page_loader_many_redirects(
+def test_download_page_many_redirects(
         mock_response_many_redirects,
         test_page
     ):
     with pytest.raises(PageLoaderError):
-        page_loader(test_page.url)
+        download_page(test_page.url)
 
 
-def test_page_loader_dir_not_exists(
+def test_download_page_dir_not_exists(
         tmp_path,
         mock_response_successful,
         mock_open_dir_not_exists,
@@ -82,10 +82,10 @@ def test_page_loader_dir_not_exists(
     destination = tmp_path / TEMP_DIR
 
     with pytest.raises(PageLoaderError):
-        page_loader(test_page.url, destination)
+        download_page(test_page.url, destination)
 
 
-def test_page_loader_permission_denied(
+def test_download_page_permission_denied(
         tmp_path,
         mock_response_successful,
         mock_open_permisson_denied,
@@ -94,4 +94,4 @@ def test_page_loader_permission_denied(
     destination = tmp_path / TEMP_DIR
 
     with pytest.raises(PageLoaderError):
-        page_loader(test_page.url, destination)
+        download_page(test_page.url, destination)
