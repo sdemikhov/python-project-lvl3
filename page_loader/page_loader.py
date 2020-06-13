@@ -10,8 +10,17 @@ from page_loader.exceptions import PageLoaderError
 from page_loader import file
 
 
-DOWNLOADING = 'Downloading local resources'
 logger = getLogger()
+
+DOWNLOADING = 'Downloading local resources'
+RESPONSE_CODE_MESSAGE_TEMPATE = (
+    "File '{url}' wasn't downloaded! Unacceptable response code '{code}'"
+)
+SUCCESSFUL_STATUS_CODE = 200
+USER_AGENT = (
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
+    '(KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'
+)
 
 
 def download_page(target_url, destination=''):
@@ -43,16 +52,6 @@ def download_page(target_url, destination=''):
             )
             progress_.next()
         progress_.finish()
-
-
-RESPONSE_CODE_MESSAGE_TEMPATE = (
-    "File '{url}' wasn't downloaded! Unacceptable response code '{code}'"
-)
-SUCCESSFUL_STATUS_CODE = 200
-USER_AGENT = (
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
-    '(KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'
-)
 
 
 def send_request(url, stream=False):
