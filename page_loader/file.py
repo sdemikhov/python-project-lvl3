@@ -30,9 +30,7 @@ def validate_dir(path):
 def write_text(path, data):
     try:
         with open(path, 'w') as page:
-            logger.debug('Saving page into: {}'.format(path))
             page.write(data)
-            logger.debug("Page saved successfuly.")
     except (FileNotFoundError, PermissionError, NotADirectoryError) as err:
         raise PageLoaderError(err) from err
 
@@ -55,7 +53,6 @@ def write_response(path, response):
             decode_unicode = False
 
         with open(path, reading_mode) as f:
-            logger.debug('Saving file into: {}'.format(path))
             for line in response.iter_content(
                 decode_unicode=decode_unicode,
             ):
