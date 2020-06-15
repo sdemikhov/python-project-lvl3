@@ -1,3 +1,3 @@
-from page_loader.page_loader import download_page
+from page_loader.core import download_page
 
 __all__ = ['download_page']

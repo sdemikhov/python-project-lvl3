@@ -2,8 +2,7 @@ import requests
 import pytest
 from bs4 import BeautifulSoup
 
-from page_loader import download_page
-from page_loader.exceptions import PageLoaderError
+from page_loader.core import download_page, PageLoaderError
 
 TEMP_DIR = "test_page_loader_successful_responce"
 

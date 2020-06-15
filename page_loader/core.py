@@ -7,12 +7,6 @@ from bs4 import BeautifulSoup
 import urllib
 import collections
 
-from page_loader.exceptions import PageLoaderError
-from page_loader import file
-
-
-logger = logging.getLogger()
-names_counter = collections.Counter()
 
 DOWNLOADING = 'Downloading local resources'
 RESPONSE_CODE_MESSAGE_TEMPATE = (
@@ -48,15 +42,22 @@ NOT_LETTERS_OR_DIGITS = re.compile(r'[^a-zA-Zа-яА-Я0-9]')
 SEPARATOR = '-'
 MAX_FILENAME_LENGTH = 255
 
+logger = logging.getLogger()
+names_counter = collections.Counter()
+
+
+class PageLoaderError(Exception):
+    pass
+
 
 def download_page(target_url, destination=''):
     path = Path(destination)
-    file.validate_dir(path)
+    validate_dir(path)
 
     response = send_request(target_url)
 
     (page_text, page_filename), resources = parse_page(response)
-    file.write_text(path / page_filename, page_text)
+    write_text(path / page_filename, page_text)
 
     if resources:
         progress_ = Bar(
@@ -70,7 +71,7 @@ def download_page(target_url, destination=''):
             try:
                 resource_response = send_request(url_, stream=True)
 
-                file.write_response(
+                write_response(
                     path / resource_filename,
                     resource_response,
                 )
@@ -223,3 +224,62 @@ def important_tag_has_local_resource(tag):
         tag.has_attr(IMPORTANT_TAGS[tag.name]) and
         LOCAL_RESOURCES.search(tag.get(IMPORTANT_TAGS[tag.name]))
     )
+
+
+def validate_dir(path):
+    if not path.exists():
+        logger.error('No such file or directory: {}'.format(path))
+        logger.debug(
+            'No such file or directory: {}'.format(path),
+            exc_info=True,
+        )
+        raise PageLoaderError(
+            'No such file or directory: {}'.format(path)
+        )
+    if not path.is_dir():
+        logger.error('Not a directory: {}'.format(path))
+        logger.debug(
+            'Not a directory: {}'.format(path),
+            exc_info=True,
+        )
+        raise PageLoaderError(
+            'Not a directory: {}'.format(path)
+        )
+    return True
+
+
+def write_text(path, data):
+    try:
+        with open(path, 'w') as page:
+            page.write(data)
+    except (FileNotFoundError, PermissionError, NotADirectoryError) as err:
+        raise PageLoaderError(err) from err
+
+
+def write_response(path, response):
+    try:
+        if not path.parent.exists():
+            logger.warning(
+                "Directory '{}' doesn`t exist"
+                " start making directory...".format(path.parent)
+            )
+            path.parent.mkdir()
+            logger.warning("Directory created sucessfuly.")
+
+        if response.encoding:
+            reading_mode = 'w'
+            decode_unicode = True
+        else:
+            reading_mode = 'wb'
+            decode_unicode = False
+
+        with open(path, reading_mode) as f:
+            for line in response.iter_content(
+                decode_unicode=decode_unicode,
+            ):
+                f.write(line)
+            logger.debug(
+                "File saved successfuly."
+            )
+    except (FileNotFoundError, PermissionError, NotADirectoryError) as err:
+        raise PageLoaderError(err) from err

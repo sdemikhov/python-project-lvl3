@@ -2,9 +2,8 @@ import sys
 from logging import getLogger
 
 from page_loader.cli import parser
-from page_loader.page_loader import download_page
+from page_loader.core import download_page, PageLoaderError
 from page_loader import logging
-from page_loader.exceptions import PageLoaderError
 
 
 def main():
