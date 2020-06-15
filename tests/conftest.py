@@ -34,7 +34,7 @@ ERROR = 404
 def mock_response(
         ok=True,
         text=None,
-        iter_content=None,
+        content=None,
         status_code=SUCCESSFUL,
         url=None,
         encoding='utf-8',
@@ -42,23 +42,17 @@ def mock_response(
     ):
     Response = namedtuple(
         'Response',
-        'ok, text, iter_content, status_code, url, encoding, headers'
+        'ok, text, content, status_code, url, encoding, headers'
     )
     return Response(
         ok,
         text,
-        iter_content,
+        content,
         status_code,
         url,
         encoding,
         headers,
     )
-
-
-def make_iter_content(data):
-    def inner(*args, **kwargs):
-        return (line.encode() for line in data)
-    return inner
 
 
 def make_page(path, filename, url=None, directory=None):
@@ -111,7 +105,7 @@ def mock_response_successful(monkeypatch, test_page, expected_resource):
             return mock_response(text=test_page.content, url=PAGE_URL)
         elif RESOURCE_URL in args:
             return mock_response(
-                iter_content=make_iter_content(expected_resource.content),
+                content=expected_resource.content.encode(),
                 url=RESOURCE_URL,
                 encoding=None,
             )

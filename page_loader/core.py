@@ -52,33 +52,40 @@ class PageLoaderError(Exception):
 
 def download_page(target_url, destination=''):
     path = Path(destination)
-    validate_dir(path)
 
-    response = send_request(target_url)
+    page_content, page_binary, response_url = send_request(target_url)
+    if page_binary:
+        raise PageLoaderError(
+            'Check url, content of downloaded page is binary file!'
+        )
 
-    (page_text, page_filename), resources = parse_page(response)
-    write_text(path / page_filename, page_text)
+    parsed = parse_page(page_content, response_url)
+    (page_text, page_filename), resources = parsed
+    write_to_file(
+        path / page_filename,
+        page_text,
+    )
 
     if resources:
         progress_ = Bar(
-                DOWNLOADING,
-                max=len(resources),
-                suffix='%(percent)d%%',
+            DOWNLOADING,
+            max=len(resources),
+            suffix='%(percent)d%%',
         )
 
         resources_download_fail = []
         for url_, resource_filename in resources:
             try:
-                resource_response = send_request(url_, stream=True)
+                resource_content, resource_binary, _ = send_request(url_)
 
-                write_response(
+                write_to_file(
                     path / resource_filename,
-                    resource_response,
+                    resource_content,
+                    binary_mode=resource_binary,
                 )
             except PageLoaderError as err:
                 logger.error(err)
                 resources_download_fail.append(url_)
-                resource_response.close()
             progress_.next()
         progress_.finish()
         if resources_download_fail:
@@ -89,11 +96,16 @@ def download_page(target_url, destination=''):
             )
 
 
-def send_request(url, stream=False):
+def send_request(url):
     headers = {'User-Agent': USER_AGENT}
     try:
-        response = requests.get(url, stream=stream, headers=headers)
-
+        response = requests.get(url, headers=headers)
+        if response.encoding:
+            content = response.text
+            binary = False
+        else:
+            content = response.content
+            binary = True
     except requests.exceptions.MissingSchema as err:
         raise PageLoaderError(SCHEMA_ERROR) from err
     except requests.exceptions.ConnectionError as err:
@@ -106,7 +118,7 @@ def send_request(url, stream=False):
         raise PageLoaderError(UKNOWN_ERROR) from err
 
     if response.status_code == SUCCESSFUL_STATUS_CODE:
-        return response
+        return (content, binary, response.url)
     logger.error(
         RESPONSE_CODE_MESSAGE_TEMPATE.format(
             url=url,
@@ -121,13 +133,10 @@ def send_request(url, stream=False):
     )
 
 
-def parse_page(response):
-    logger.debug(
-        "Start parsing page '{}'...".format(response.url)
-    )
-    soup = BeautifulSoup(response.text, features="html.parser")
+def parse_page(decoded_html, url):
+    soup = BeautifulSoup(decoded_html, features="html.parser")
 
-    base_for_name = make_name_from_url(response.url)
+    base_for_name = make_name_from_url(url)
     page_filename = base_for_name + EXTENSION
     resources_dir = Path(base_for_name + SUFFIX)
 
@@ -137,11 +146,11 @@ def parse_page(response):
         logger.debug("Local resource found: '{}'".format(tag))
         attribute_name = IMPORTANT_TAGS[tag.name]
         resource_url = urllib.parse.urljoin(
-            response.url,
+            url,
             tag[attribute_name]
         )
 
-        if resource_url == response.url:
+        if resource_url == url:
             logger.debug(
                 "Resource url == page url! Skip resource: '{}'".format(tag)
             )
@@ -248,38 +257,47 @@ def validate_dir(path):
     return True
 
 
-def write_text(path, data):
+def write_to_file(path_to_file, data, binary_mode=False):
+    path = Path(path_to_file)
+    make_directory(path)
+
+    mode = 'w'
+    if binary_mode:
+        mode = 'wb'
+
     try:
-        with open(path, 'w') as page:
-            page.write(data)
-    except (FileNotFoundError, PermissionError, NotADirectoryError) as err:
-        raise PageLoaderError(err) from err
+        with open(path, mode) as f:
+            f.write(data)
+    except PermissionError as err:
+        raise PageLoaderError(
+            "Can't write '{}' permission denied".format(path)
+        ) from err
+    except OSError as err:
+        raise PageLoaderError(
+            "Error while writing to file '{}'".format(
+                path
+            )
+        ) from err
 
 
-def write_response(path, response):
+def make_directory(path_to_file):
+    path = Path(path_to_file)
+
     try:
-        if not path.parent.exists():
-            logger.warning(
-                "Directory '{}' doesn`t exist"
-                " start making directory...".format(path.parent)
-            )
-            path.parent.mkdir()
-            logger.warning("Directory created sucessfuly.")
-
-        if response.encoding:
-            reading_mode = 'w'
-            decode_unicode = True
-        else:
-            reading_mode = 'wb'
-            decode_unicode = False
-
-        with open(path, reading_mode) as f:
-            for line in response.iter_content(
-                decode_unicode=decode_unicode,
-            ):
-                f.write(line)
-            logger.debug(
-                "File saved successfuly."
-            )
-    except (FileNotFoundError, PermissionError, NotADirectoryError) as err:
-        raise PageLoaderError(err) from err
+        path.parent.mkdir(parents=True, exist_ok=True)
+    except NotADirectoryError as err:
+        raise PageLoaderError(
+            "'{}' is not a directory!".format(path)
+        ) from err
+    except PermissionError as err:
+        raise PageLoaderError(
+            "Can't create '{}' permission denied".format(path)
+        ) from err
+    except FileExistsError as err:
+        raise PageLoaderError(
+            "Last path component is an existing non-directory file"
+        ) from err
+    except OSError as err:
+        raise PageLoaderError(
+            "Unknown error while creating '{}'".format(path)
+        ) from err
