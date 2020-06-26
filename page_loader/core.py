@@ -9,6 +9,11 @@ import collections
 
 
 DOWNLOADING = 'Downloading local resources'
+
+REQUEST_ERROR_PREFIX = "[RE] "
+DIRECTORY_ERROR_PREFIX = "[DE] "
+WRITE_ERROR_PREFIX = "[WE] "
+
 RESPONSE_CODE_MESSAGE_TEMPATE = (
     "File '{url}' wasn't downloaded! Unacceptable response code '{code}'"
 )
@@ -18,12 +23,21 @@ CONNECTION_ERROR = (
 )
 TIMEOUT_ERROR = "The requested resource does not respond for a long time!"
 REDIRECTS_ERROR = "Many redirects occurred while accessing the resource"
-UKNOWN_ERROR = 'An unknown error occurred while processing the request'
+
 SUCCESSFUL_STATUS_CODE = 200
 USER_AGENT = (
     'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
     '(KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'
 )
+
+FILE_IO_ERROR = (
+    "An error occured while writing to file '{}',"
+    " use debug mode for more info."
+)
+
+NOT_A_DIRECTORY_ERROR = "'{}' is not a directory!"
+PERMISSION_ERROR = "Can't create '{}' permission denied"
+FILE_EXISTS_ERROR = "Last path component is an existing non-directory file"
 
 EXTENSION = '.html'
 SUFFIX = '_files'
@@ -55,15 +69,20 @@ def download_page(target_url, destination=''):
 
     page_content, page_binary, response_url = send_request(target_url)
     if page_binary:
-        raise PageLoaderError(
-            'Check url, content of downloaded page is binary file!'
+        page = page_content
+        page_filename = make_name_from_url(
+            response_url,
+            search_extension=True
         )
+        resources = []
+    else:
+        parsed = parse_page(page_content, response_url)
+        (page, page_filename), resources = parsed
 
-    parsed = parse_page(page_content, response_url)
-    (page_text, page_filename), resources = parsed
     write_to_file(
         path / page_filename,
-        page_text,
+        page,
+        binary_mode=page_binary,
     )
 
     if resources:
@@ -77,20 +96,21 @@ def download_page(target_url, destination=''):
         for url_, resource_filename in resources:
             try:
                 resource_content, resource_binary, _ = send_request(url_)
-
+            except PageLoaderError as err:
+                logger.error(err)
+                resources_download_fail.append(url_)
+            else:
                 write_to_file(
                     path / resource_filename,
                     resource_content,
                     binary_mode=resource_binary,
                 )
-            except PageLoaderError as err:
-                logger.error(err)
-                resources_download_fail.append(url_)
             progress_.next()
+
         progress_.finish()
         if resources_download_fail:
             logger.warning(
-                "Error while downloading resources: {}".format(
+                "Some resources are wasn't downloaded: '{}'".format(
                     ', '.join(resources_download_fail)
                 )
             )
@@ -107,26 +127,19 @@ def send_request(url):
             content = response.content
             binary = True
     except requests.exceptions.MissingSchema as err:
-        raise PageLoaderError(SCHEMA_ERROR) from err
+        raise PageLoaderError(REQUEST_ERROR_PREFIX + SCHEMA_ERROR) from err
     except requests.exceptions.ConnectionError as err:
-        raise PageLoaderError(CONNECTION_ERROR) from err
+        raise PageLoaderError(REQUEST_ERROR_PREFIX + CONNECTION_ERROR) from err
     except requests.exceptions.Timeout as err:
-        raise PageLoaderError(TIMEOUT_ERROR) from err
+        raise PageLoaderError(REQUEST_ERROR_PREFIX + TIMEOUT_ERROR) from err
     except requests.exceptions.TooManyRedirects as err:
-        raise PageLoaderError(REDIRECTS_ERROR) from err
-    except requests.exceptions.RequestException as err:
-        raise PageLoaderError(UKNOWN_ERROR) from err
+        raise PageLoaderError(REQUEST_ERROR_PREFIX + REDIRECTS_ERROR) from err
 
     if response.status_code == SUCCESSFUL_STATUS_CODE:
         return (content, binary, response.url)
-    logger.error(
-        RESPONSE_CODE_MESSAGE_TEMPATE.format(
-            url=url,
-            code=response.status_code
-        )
-    )
+
     raise PageLoaderError(
-        RESPONSE_CODE_MESSAGE_TEMPATE.format(
+        REQUEST_ERROR_PREFIX + RESPONSE_CODE_MESSAGE_TEMPATE.format(
             url=url,
             code=response.status_code
         )
@@ -164,9 +177,6 @@ def parse_page(decoded_html, url):
         new_value = resource_filename
         tag[attribute_name] = new_value
 
-    logger.debug(
-        "Page successfuly parsed."
-    )
     return (
         (str(soup), page_filename),
         tuple(resources),
@@ -235,28 +245,6 @@ def important_tag_has_local_resource(tag):
     )
 
 
-def validate_dir(path):
-    if not path.exists():
-        logger.error('No such file or directory: {}'.format(path))
-        logger.debug(
-            'No such file or directory: {}'.format(path),
-            exc_info=True,
-        )
-        raise PageLoaderError(
-            'No such file or directory: {}'.format(path)
-        )
-    if not path.is_dir():
-        logger.error('Not a directory: {}'.format(path))
-        logger.debug(
-            'Not a directory: {}'.format(path),
-            exc_info=True,
-        )
-        raise PageLoaderError(
-            'Not a directory: {}'.format(path)
-        )
-    return True
-
-
 def write_to_file(path_to_file, data, binary_mode=False):
     path = Path(path_to_file)
     make_directory(path)
@@ -268,15 +256,9 @@ def write_to_file(path_to_file, data, binary_mode=False):
     try:
         with open(path, mode) as f:
             f.write(data)
-    except PermissionError as err:
-        raise PageLoaderError(
-            "Can't write '{}' permission denied".format(path)
-        ) from err
     except OSError as err:
         raise PageLoaderError(
-            "Error while writing to file '{}'".format(
-                path
-            )
+            WRITE_ERROR_PREFIX + FILE_IO_ERROR.format(path)
         ) from err
 
 
@@ -287,17 +269,13 @@ def make_directory(path_to_file):
         path.parent.mkdir(parents=True, exist_ok=True)
     except NotADirectoryError as err:
         raise PageLoaderError(
-            "'{}' is not a directory!".format(path)
+            DIRECTORY_ERROR_PREFIX + NOT_A_DIRECTORY_ERROR.format(path)
         ) from err
     except PermissionError as err:
         raise PageLoaderError(
-            "Can't create '{}' permission denied".format(path)
+            DIRECTORY_ERROR_PREFIX + PERMISSION_ERROR.format(path)
         ) from err
     except FileExistsError as err:
         raise PageLoaderError(
-            "Last path component is an existing non-directory file"
-        ) from err
-    except OSError as err:
-        raise PageLoaderError(
-            "Unknown error while creating '{}'".format(path)
+            DIRECTORY_ERROR_PREFIX + FILE_EXISTS_ERROR
         ) from err
