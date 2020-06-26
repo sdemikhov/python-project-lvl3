@@ -24,6 +24,7 @@ progress = "^1.5"
 [tool.poetry.dev-dependencies]
 flake8 = "^3.8.1"
 pytest = "^5.4.2"
+pytest-cov = "^2.10.0"
 
 [tool.poetry.scripts]
 page-loader = "page_loader.scripts.page_loader:main"
