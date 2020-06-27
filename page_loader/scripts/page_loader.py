@@ -1,15 +1,21 @@
 import sys
-from logging import getLogger
 import traceback
+import logging
 
-from page_loader import cli, logging, core
+from page_loader import cli, core
+from page_loader import logging as pl_logging
+
+SUCCESSFUL_EXIT_CODE = 0
+COMMON_ERROR_EXIT_CODE = 1
+NETWORK_ERROR_EXIT_CODE = 2
+DIRECTORY_ERROR_EXIT_CODE = 3
+FILE_ERROR_EXIT_CODE = 4
 
 
 def main():
     arguments = cli.parser.parse_args()
-    logging.setup(arguments.log_level)
-    logger = getLogger()
-    logger.debug(
+    pl_logging.setup(arguments.log_level)
+    logging.debug(
         'User passed following arguments: {}'.format(arguments)
     )
     try:
@@ -18,20 +24,23 @@ def main():
             destination=arguments.destination,
         )
     except core.PageLoaderError as e:
-        logger.error(str(e))
+        logging.error(str(e))
         if e.__cause__:
-            logger.debug(traceback.format_exc())
-
-        if str(e).startswith(core.REQUEST_ERROR_PREFIX):
-            sys.exit(2)
-        elif str(e).startswith(core.DIRECTORY_ERROR_PREFIX):
-            sys.exit(3)
-        elif str(e).startswith(core.WRITE_ERROR_PREFIX):
-            sys.exit(4)
-        sys.exit(1)
-
-    else:
-        sys.exit(0)
+            exception_cause = traceback.format_exception(
+                etype=type(e.__cause__),
+                value=e.__cause__,
+                tb=e.__cause__.__traceback__
+            )
+            logging.debug(''.join(exception_cause))
+        if isinstance(e, core.PageLoaderNetworkError):
+            sys.exit(NETWORK_ERROR_EXIT_CODE)
+        elif isinstance(e, core.PageLoaderNetworkError):
+            sys.exit(DIRECTORY_ERROR_EXIT_CODE)
+        elif isinstance(e, core.PageLoaderNetworkError):
+            sys.exit(FILE_ERROR_EXIT_CODE)
+        else:
+            sys.exit(COMMON_ERROR_EXIT_CODE)
+    sys.exit(SUCCESSFUL_EXIT_CODE)
 
 
 if __name__ == "__main__":
