@@ -27,34 +27,6 @@ RESOURCE_FILENAME = (
 )
 
 
-SUCCESSFUL = 200
-ERROR = 404
-
-
-def mock_response(
-        ok=True,
-        text=None,
-        content=None,
-        status_code=SUCCESSFUL,
-        url=None,
-        encoding='utf-8',
-        headers={'Content-Length': '30'}
-    ):
-    Response = namedtuple(
-        'Response',
-        'ok, text, content, status_code, url, encoding, headers'
-    )
-    return Response(
-        ok,
-        text,
-        content,
-        status_code,
-        url,
-        encoding,
-        headers,
-    )
-
-
 def make_page(path, filename, url=None, directory=None):
     Page = namedtuple(
         'Page',
@@ -96,29 +68,6 @@ def expected_resource():
         url=RESOURCE_URL,
         directory=RESOURCE_DIR,
     )
-
-
-@pytest.fixture
-def mock_response_successful(monkeypatch, test_page, expected_resource):
-    def mock_get(*args, **kwargs):
-        if PAGE_URL in args:
-            return mock_response(text=test_page.content, url=PAGE_URL)
-        elif RESOURCE_URL in args:
-            return mock_response(
-                content=expected_resource.content.encode(),
-                url=RESOURCE_URL,
-                encoding=None,
-            )
-
-    monkeypatch.setattr(requests, "get", mock_get)
-
-
-@pytest.fixture
-def mock_response_code_404(monkeypatch):
-    def mock_get(*args, **kwargs):
-        return mock_response(ok=False, status_code=ERROR)
-
-    monkeypatch.setattr(requests, "get", mock_get)
 
 
 @pytest.fixture
