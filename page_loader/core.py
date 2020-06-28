@@ -56,16 +56,9 @@ def download_page(target_url, destination=''):
     path = Path(destination)
 
     page_content, page_binary, response_url = send_request(target_url)
-    if page_binary:
-        page = page_content
-        page_filename = make_name_from_url(
-            response_url,
-            search_extension=True
-        )
-        resources = []
-    else:
-        parsed = parse_page(page_content, response_url)
-        (page, page_filename), resources = parsed
+
+    prepared = parse_and_process_page(page_content, response_url)
+    page, page_filename, resources = prepared
 
     write_to_file(
         path / page_filename,
@@ -144,7 +137,7 @@ def send_request(url):
     return (content, binary, response.url)
 
 
-def parse_page(decoded_html, url):
+def parse_and_process_page(decoded_html, url):
     soup = BeautifulSoup(decoded_html, features="html.parser")
 
     base_for_name = make_name_from_url(url)
@@ -175,10 +168,7 @@ def parse_page(decoded_html, url):
         new_value = resource_filename
         tag[attribute_name] = new_value
 
-    return (
-        (str(soup), page_filename),
-        resources,
-    )
+    return (str(soup), page_filename, resources)
 
 
 def make_name_from_url(url, search_extension=False):
