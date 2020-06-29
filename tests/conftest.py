@@ -107,18 +107,36 @@ def mock_response_many_redirects(monkeypatch):
 
 
 @pytest.fixture
-def mock_open_dir_not_exists(monkeypatch):
-    def mock_open(*args, **kwargs):
-        raise FileNotFoundError
+def mock_path_permisson_denied(monkeypatch):
+    def mock_path_make_dir(*args, **kwargs):
+        raise PermissionError
         return None
 
-    monkeypatch.setattr(builtins, "open", mock_open)
+    monkeypatch.setattr(Path, "mkdir", mock_path_make_dir)
 
 
 @pytest.fixture
-def mock_open_permisson_denied(monkeypatch):
+def mock_path_not_a_directory(monkeypatch):
+    def mock_path_make_dir(*args, **kwargs):
+        raise NotADirectoryError
+        return None
+
+    monkeypatch.setattr(Path, "mkdir", mock_path_make_dir)
+
+
+@pytest.fixture
+def mock_path_file_exists_error(monkeypatch):
+    def mock_path_make_dir(*args, **kwargs):
+        raise FileExistsError
+        return None
+
+    monkeypatch.setattr(Path, "mkdir", mock_path_make_dir)
+
+
+@pytest.fixture
+def mock_open_oserror(monkeypatch):
     def mock_open(*args, **kwargs):
-        raise PermissionError
+        raise OSError
         return None
 
     monkeypatch.setattr(builtins, "open", mock_open)
