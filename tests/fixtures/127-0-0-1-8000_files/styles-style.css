@@ -1,0 +1,35 @@
+.c-red {
+    color: red;
+}
+
+.bg-grey {
+    background: grey;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.p-10 {
+    padding: 10px;
+}
+
+.f-dir-col {
+    flex-direction: column;
+}
+
+.js-cont-center {
+    justify-content: center;
+}
+
+.a-items-center {
+    align-items: center;
+}
+
+.width-1000 {
+    width: 1000px;
+}
+
+.width-160 {
+    width: 160px;
+}

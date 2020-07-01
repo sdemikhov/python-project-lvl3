@@ -1,8 +1,11 @@
 import requests
 import pytest
-from collections import namedtuple
+from collections import defaultdict
 import builtins
 from pathlib import Path
+import os
+from http.server import SimpleHTTPRequestHandler, HTTPServer
+import threading
 
 from page_loader import logging
 
@@ -11,31 +14,24 @@ from page_loader import logging
 TESTS_DIR = Path(__file__).parent.absolute()
 FIXTURES_DIR = TESTS_DIR / 'fixtures'
 
-PAGE_FILENAME = 'courses.html'
-PAGE_URL = 'https://ru.hexlet.io/courses'
-
-
-RESULT_FILENAME = 'ru-hexlet-io-courses.html'
-
-RESOURCE_DIR = 'ru-hexlet-io-courses_files'
-RESOURCE_URL = (
-    'https://ru.hexlet.io/cdn-cgi/scripts'
-    '/5c5dd728/cloudflare-static/email-decode.min.js'
-)
-RESOURCE_FILENAME = (
-    'cdn-cgi-scripts-5c5dd728-cloudflare-static-email-decode-min.js'
+ORIGINAL_PAGE_FILENAME = 'index.html'
+ORIGINAL_PAGE_URL = 'http://127.0.0.1:8000/'
+ORIGINAL_RESOURCES_PATHS = (
+    FIXTURES_DIR / '/images/logo.png',
+    FIXTURES_DIR / '/styles/style.css',
+    FIXTURES_DIR / '/scripts/script.js',
 )
 
 
-def make_page(path, filename, url=None, directory=None):
-    Page = namedtuple(
-        'Page',
-        'path, filename, url, directory, content'
-    )
+EXPECTED_PAGE_FILENAME = '127-0-0-1-8000.html'
 
-    with open(path / filename) as f:
-        content = f.read()
-    return Page(path, filename, url, directory, content)
+EXPECTED_RESOURCES_DIR = '127-0-0-1-8000_files'
+
+EXPECTED_RESOURCES_PATHS = (
+    '127-0-0-1-8000/filesimages-logo.png',
+    '127-0-0-1-8000_files/scripts-script.js',
+    '127-0-0-1-8000_files/styles-style.css',
+)
 
 
 @pytest.fixture(autouse=True)
@@ -44,30 +40,36 @@ def enable_log():
 
 
 @pytest.fixture
-def test_page():
-    return make_page(
-        FIXTURES_DIR,
-        PAGE_FILENAME,
-        url=PAGE_URL
-    )
+def page():
+    page = defaultdict(dict)
+
+    page['original']['url'] = ORIGINAL_PAGE_URL
+    page['original']['resources_paths'] = [
+        path for path in ORIGINAL_RESOURCES_PATHS
+    ]
+
+    with open(FIXTURES_DIR / EXPECTED_PAGE_FILENAME) as e:
+        page['expected']['text'] = e.read()
+    page['expected']['filename'] = EXPECTED_PAGE_FILENAME
+
+    page['expected']['resources_paths'] = [
+        path for path in EXPECTED_RESOURCES_PATHS
+    ]
+    return page
+
+
+def create_server():
+    os.chdir(FIXTURES_DIR)
+    server_address = ('', 8000)   
+    httpd = HTTPServer(server_address, SimpleHTTPRequestHandler)                                                                                                                                   
+    httpd.serve_forever()
 
 
 @pytest.fixture
-def expected_page():
-    return make_page(
-        FIXTURES_DIR,
-        RESULT_FILENAME,
-    )
-
-
-@pytest.fixture
-def expected_resource():
-    return make_page(
-        FIXTURES_DIR / RESOURCE_DIR,
-        RESOURCE_FILENAME,
-        url=RESOURCE_URL,
-        directory=RESOURCE_DIR,
-    )
+def http_server():
+    httpd_ = threading.Thread(target=create_server)
+    httpd_.daemon = True
+    httpd_.start()
 
 
 @pytest.fixture
