@@ -179,26 +179,21 @@ def make_name_from_url(url, search_extension=False):
         parts = FILENAME_WITH_EXTENSION.search(cleared_url)
         if parts is not None:
             short_name = make_short_name(
-                (
                     NOT_LETTERS_OR_DIGITS.sub(SEPARATOR, parts.group('name')),
                     parts.group('extension')
-                )
             )
             if short_name:
                 return short_name
 
     return make_short_name(
-        (
             NOT_LETTERS_OR_DIGITS.sub(SEPARATOR, cleared_url),
-            '',
-        )
+            ''
     )
 
 
-def make_short_name(long_name_and_extension):
+def make_short_name(name, extension):
     result = ''
 
-    name, extension = long_name_and_extension
     name_bytes = name.encode()
     extension_bytes = extension.encode()
 
