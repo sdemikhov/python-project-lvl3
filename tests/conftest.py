@@ -1,36 +1,34 @@
 import requests
 import pytest
-from collections import defaultdict
 import builtins
 from pathlib import Path
 import os
 from http.server import SimpleHTTPRequestHandler, HTTPServer
+import socket
 import threading
+from jinja2 import Environment, FileSystemLoader
 
 from page_loader import logging
-
-
 
 TESTS_DIR = Path(__file__).parent.absolute()
 FIXTURES_DIR = TESTS_DIR / 'fixtures'
 
-ORIGINAL_PAGE_FILENAME = 'index.html'
-ORIGINAL_PAGE_URL = 'http://127.0.0.1:8000/'
+ORIGINAL_PAGE_URL = 'http://127.0.0.1:{}/'
 ORIGINAL_RESOURCES_PATHS = (
-    FIXTURES_DIR / '/images/logo.png',
-    FIXTURES_DIR / '/styles/style.css',
-    FIXTURES_DIR / '/scripts/script.js',
+    FIXTURES_DIR / 'images/logo.png',
+    FIXTURES_DIR / 'styles/style.css',
+    FIXTURES_DIR / 'scripts/script.js',
 )
 
+EXPECTED_PAGE_TEMPLATE = 'expected_page.html'
+EXPECTED_PAGE_FILENAME = '127-0-0-1-{}.html'
 
-EXPECTED_PAGE_FILENAME = '127-0-0-1-8000.html'
-
-EXPECTED_RESOURCES_DIR = '127-0-0-1-8000_files'
+EXPECTED_RESOURCES_DIR = '127-0-0-1-{}_files'
 
 EXPECTED_RESOURCES_PATHS = (
-    '127-0-0-1-8000/filesimages-logo.png',
-    '127-0-0-1-8000_files/scripts-script.js',
-    '127-0-0-1-8000_files/styles-style.css',
+    'images-logo.png',
+    'styles-style.css',
+    'scripts-script.js',
 )
 
 
@@ -39,37 +37,70 @@ def enable_log():
     logging.setup(logging.DEBUG)
 
 
+class TestPage:
+    def __init__(self, port):
+        self.port = port
+
+    @property
+    def url(self):
+        return ORIGINAL_PAGE_URL.format(self.port)
+
+    @property
+    def expected_filename(self):
+        return EXPECTED_PAGE_FILENAME.format(self.port)
+
+    @property
+    def expected_resources_dir(self):
+        return EXPECTED_RESOURCES_DIR.format(self.port)
+
+
+    def get_resources_pairs(self):
+        expected_resources = [Path(self.expected_resources_dir, p)
+                              for p in EXPECTED_RESOURCES_PATHS]
+        return [
+            (o,e) for o, e in zip(ORIGINAL_RESOURCES_PATHS, expected_resources)
+        ]
+
+
+    def render_expected_page_text(self):
+        env = Environment(loader=FileSystemLoader(FIXTURES_DIR / 'templates'))
+        template = env.get_template(EXPECTED_PAGE_TEMPLATE)
+        return template.render(port=self.port)
+
+
 @pytest.fixture
-def page():
-    page = defaultdict(dict)
-
-    page['original']['url'] = ORIGINAL_PAGE_URL
-    page['original']['resources_paths'] = [
-        path for path in ORIGINAL_RESOURCES_PATHS
-    ]
-
-    with open(FIXTURES_DIR / EXPECTED_PAGE_FILENAME) as e:
-        page['expected']['text'] = e.read()
-    page['expected']['filename'] = EXPECTED_PAGE_FILENAME
-
-    page['expected']['resources_paths'] = [
-        path for path in EXPECTED_RESOURCES_PATHS
-    ]
-    return page
+def test_page():
+    return TestPage
 
 
-def create_server():
-    os.chdir(FIXTURES_DIR)
-    server_address = ('', 8000)   
-    httpd = HTTPServer(server_address, SimpleHTTPRequestHandler)                                                                                                                                   
-    httpd.serve_forever()
+def get_free_port():
+    s = socket.socket(socket.AF_INET, type=socket.SOCK_STREAM)
+    s.bind(('localhost', 0))
+    address, port = s.getsockname()
+    s.close()
+    return port
+
+
+class Mock_Server:
+    def _setup(self):
+        self.port = get_free_port()
+        os.chdir(FIXTURES_DIR)
+        server_address = ('', self.port)
+        server = HTTPServer(server_address, SimpleHTTPRequestHandler)
+        self.server = server
+
+    def run(self):
+        self._setup()
+        httpd_ = threading.Thread(target=self.server.serve_forever)
+        httpd_.daemon = True
+        httpd_.start()
 
 
 @pytest.fixture
-def http_server():
-    httpd_ = threading.Thread(target=create_server)
-    httpd_.daemon = True
-    httpd_.start()
+def mock_server():
+    server = Mock_Server()
+    server.run()
+    return server
 
 
 @pytest.fixture
