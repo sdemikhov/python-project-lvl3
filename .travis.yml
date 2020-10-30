@@ -3,7 +3,7 @@ python: 3.7
 
 env:
   global:
-    - CC_TEST_REPORTER_ID=f32e86ed06c74d88452d20397d33af61b6b3155e7b59787a89789422484f828f
+    - CC_TEST_REPORTER_ID=4cfe61d5d22132e182b0213acba082611f3ea00b2cc478c1bedee63e7733e9ac
 
 before_install:
   # make depends on poetry
